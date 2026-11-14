@@ -8,7 +8,7 @@ export interface ShouldAlertInput {
   /** Plan total for the year with this offer included, in cents. */
   annualCostCents: number;
   /** Employee budget in cents. Required. There is no default. */
-  budgetCents: number;
+  budgetCents: unknown;
   /** True when this offer and baseline already produced an alert. */
   alreadyAlerted: boolean;
   backfillBaseline: BackfillBaseline | null;
@@ -50,8 +50,31 @@ export function withinInclusiveTenPercent(priceCents: number, lowCents: number):
  * alert-eligible only through studioPostAlertEligible, and even then AC-6
  * runs on the confirming official-site or checkout observation.
  */
+function invalidBudget(budget: unknown): boolean {
+  return (
+    typeof budget !== "number" ||
+    !Number.isFinite(budget) ||
+    !Number.isInteger(budget) ||
+    budget <= 0
+  );
+}
+
+/** Eight weekly points, every gap at most 14 days. */
+function pathAReady(verified: PricePoint[]): boolean {
+  if (verified.length < 8) return false;
+  const times = verified.map((point) => point.capturedAt.getTime()).sort((left, right) => left - right);
+  const span = times[times.length - 1] - times[0];
+  if (span < 8 * WEEK_MS) return false;
+  const maxGapMs = 14 * 24 * 60 * 60 * 1000;
+  for (let index = 1; index < times.length; index += 1) {
+    if (times[index] - times[index - 1] > maxGapMs) return false;
+  }
+  return true;
+}
+
 export function shouldAlert(input: ShouldAlertInput): ShouldAlertResult {
-  const budget = input.budgetCents;
+  if (invalidBudget(input.budgetCents)) return no("invalid_budget");
+  const budget = input.budgetCents as number;
   const candidate = input.candidate;
 
   if (candidate.parseError) return no("parse_error");
@@ -79,7 +102,7 @@ export function shouldAlert(input: ShouldAlertInput): ShouldAlertResult {
   const span = Math.max(...times) - Math.min(...times);
   const verifiedLow = Math.min(...verified.map((point) => point.effectivePriceCents));
 
-  const pathA = span >= 8 * WEEK_MS;
+  const pathA = pathAReady(verified);
   const pathB =
     input.backfillBaseline !== null &&
     input.backfillBaseline.labeled === true &&

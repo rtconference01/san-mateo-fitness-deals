@@ -56,15 +56,26 @@ export interface AnnualCostInput {
   /** Null when the offer does not renew. */
   autoRenewPriceCents: number | null;
   feeCents: number;
-  /** Planning horizon. The budget view uses 12. */
+  /** Planning horizon in 30-day months. The year plan uses 12. */
   months?: number;
+  /**
+   * How long the intro price lasts, in days. Required when the offer renews.
+   * A free week is 7. A two-week intro is 14. Unknown length cannot be priced.
+   */
+  introLengthDays?: number | null;
 }
 
+export type AnnualCostResult =
+  | { ok: true; annualCents: number }
+  | { ok: false; reason: "unknown_intro_length" };
+
 /**
- * Annual cost includes one-time fees and, when the offer renews, the intro
- * price for the first month plus the auto-renew price for every later month.
+ * Annual cost includes fees. When the offer renews, the intro price covers
+ * introLengthDays and the renewal rate starts the day the intro ends.
+ * A 360-day year of 30-day months is the horizon. A shorter intro therefore
+ * includes an earlier renewal than a 30-day intro.
  */
-export function annualCost(input: AnnualCostInput): number {
+export function annualCost(input: AnnualCostInput): AnnualCostResult {
   const months = input.months ?? 12;
   assertCents(input.effectivePriceCents, "effective price");
   assertCents(input.feeCents, "fees");
@@ -72,14 +83,20 @@ export function annualCost(input: AnnualCostInput): number {
     throw new Error("months must be a positive integer");
   }
   if (input.autoRenewPriceCents === null) {
-    return input.effectivePriceCents + input.feeCents;
+    return { ok: true, annualCents: input.effectivePriceCents + input.feeCents };
   }
   assertCents(input.autoRenewPriceCents, "auto-renew price");
-  return (
-    input.effectivePriceCents +
-    input.autoRenewPriceCents * (months - 1) +
-    input.feeCents
-  );
+  const introDays = input.introLengthDays;
+  if (introDays === null || introDays === undefined || !Number.isInteger(introDays) || introDays <= 0) {
+    return { ok: false, reason: "unknown_intro_length" };
+  }
+  const yearDays = months * 30;
+  const remainingDays = Math.max(0, yearDays - introDays);
+  const renewalMonths = Math.ceil(remainingDays / 30);
+  return {
+    ok: true,
+    annualCents: input.effectivePriceCents + input.autoRenewPriceCents * renewalMonths + input.feeCents,
+  };
 }
 
 /**

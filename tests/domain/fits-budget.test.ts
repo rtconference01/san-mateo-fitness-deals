@@ -22,10 +22,10 @@ describe("fitsBudget", () => {
       autoRenewPriceCents: null,
       feeCents: 0,
     });
-    expect(plan149).toBe(14_900);
-    expect(plan150).toBe(15_000);
-    expect(fitsBudget(plan149, 14_900)).toBe(true);
-    expect(fitsBudget(plan150, 14_900)).toBe(false);
-    expect(fitsBudget(plan150, 15_000)).toBe(true);
+    expect(plan149).toEqual({ ok: true, annualCents: 14_900 });
+    expect(plan150).toEqual({ ok: true, annualCents: 15_000 });
+    expect(fitsBudget(14_900, 14_900)).toBe(true);
+    expect(fitsBudget(15_000, 14_900)).toBe(false);
+    expect(fitsBudget(15_000, 15_000)).toBe(true);
   });
 });

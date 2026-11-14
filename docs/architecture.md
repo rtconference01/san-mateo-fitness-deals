@@ -119,7 +119,9 @@ shouldAlert(candidate, history, backfillBaseline, planAnnualCost, alreadyAlerted
   span = latest verified capture time - earliest
   verifiedLow = minimum verified effective price
 
-  pathA = span >= 8 weeks
+  pathA = at least 8 verified observations
+          and span >= 8 weeks
+          and no gap between consecutive verified observations is over 14 days
   pathB = backfillBaseline is labeled
           and count(verified) >= 4
           and span >= 2 weeks

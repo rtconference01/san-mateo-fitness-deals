@@ -58,6 +58,14 @@ describe("rankOffers", () => {
     expect(result.rankedVerified.map((row) => row.id)).toEqual(["verified"]);
   });
 
+  it("does not rank a renewing intro with an unknown length as best", () => {
+    const unknown = offer({ id: "unknown-length", periodCostCents: 1_000, unknownIntroLength: true });
+    const known = offer({ id: "known", periodCostCents: 5_000 });
+    const result = rankOffers([unknown, known], 20_000);
+    expect(result.best?.id).toBe("known");
+    expect(result.rankedVerified.map((row) => row.id)).toEqual(["known"]);
+  });
+
   it("returns no best offer when every match is unverified", () => {
     const result = rankOffers(
       [

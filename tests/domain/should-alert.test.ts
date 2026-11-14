@@ -57,11 +57,17 @@ describe("shouldAlert", () => {
     expect(result.path).toBeNull();
   });
 
-  it("QA-15: 8 weeks of verified history, price within 10% of the low, and a fitting budget alerts once on Path A", () => {
+  function pathAHistory(price = 10_000): PricePoint[] {
+    return [0, 8, 16, 24, 32, 40, 48].map((day) =>
+      point({ capturedAt: at(day * DAY_MS), effectivePriceCents: price }),
+    );
+  }
+
+  it("QA-15: 8 weekly observations over 8 weeks, within 10% of the low, alerts once on Path A", () => {
     const result = evaluate({
-      history: [point({ capturedAt: T0, effectivePriceCents: 10_000 })],
+      history: pathAHistory(),
       candidate: point({
-        capturedAt: at(8 * WEEK_MS),
+        capturedAt: at(56 * DAY_MS),
         effectivePriceCents: 10_000,
         evidenceObjectKey: "evidence/path-a",
       }),
@@ -71,12 +77,48 @@ describe("shouldAlert", () => {
     expect(result.evidenceObjectKey).toBe("evidence/path-a");
 
     const again = evaluate({
-      history: [point({ capturedAt: T0 })],
-      candidate: point({ capturedAt: at(8 * WEEK_MS) }),
+      history: pathAHistory(),
+      candidate: point({ capturedAt: at(56 * DAY_MS) }),
       alreadyAlerted: true,
     });
     expect(again.alert).toBe(false);
     expect(again.reason).toBe("duplicate");
+  });
+
+  it("Path A needs 8 observations: two points eight weeks apart do not alert", () => {
+    const result = evaluate({
+      history: [point({ capturedAt: T0 })],
+      candidate: point({ capturedAt: at(8 * WEEK_MS) }),
+    });
+    expect(result.alert).toBe(false);
+    expect(result.reason).toBe("no_baseline");
+  });
+
+  it("Path A rejects 8 observations when any gap is 15 days", () => {
+    const history = [0, 8, 16, 24, 32, 47, 55].map((day) => point({ capturedAt: at(day * DAY_MS) }));
+    const result = evaluate({
+      history,
+      candidate: point({ capturedAt: at(63 * DAY_MS) }),
+    });
+    expect(result.alert).toBe(false);
+  });
+
+  it("QA-94: an undefined, NaN, zero, negative, or fractional budget does not alert", () => {
+    const history = pathAHistory();
+    const candidate = point({
+      capturedAt: at(56 * DAY_MS),
+      evidenceObjectKey: "evidence/budget",
+    });
+    for (const budgetCents of [undefined, Number.NaN, 0, -1, 35_000.5]) {
+      const result = evaluate({
+        history,
+        candidate,
+        annualCostCents: 99_999,
+        budgetCents,
+      });
+      expect(result.alert).toBe(false);
+      expect(result.reason).toBe("invalid_budget");
+    }
   });
 
   it("QA-16: a backfill baseline plus only 3 verified observations does not alert", () => {
@@ -121,9 +163,9 @@ describe("shouldAlert", () => {
 
   it("QA-19: a price 11% above the verified low does not alert", () => {
     const result = evaluate({
-      history: [point({ capturedAt: T0, effectivePriceCents: 10_000 })],
+      history: pathAHistory(10_000),
       candidate: point({
-        capturedAt: at(8 * WEEK_MS),
+        capturedAt: at(56 * DAY_MS),
         effectivePriceCents: 11_100,
       }),
     });
@@ -133,9 +175,9 @@ describe("shouldAlert", () => {
 
   it("QA-20: a price exactly 10% above the verified low alerts", () => {
     const result = evaluate({
-      history: [point({ capturedAt: T0, effectivePriceCents: 10_000 })],
+      history: pathAHistory(10_000),
       candidate: point({
-        capturedAt: at(8 * WEEK_MS),
+        capturedAt: at(56 * DAY_MS),
         effectivePriceCents: 11_000,
         evidenceObjectKey: "evidence/boundary",
       }),

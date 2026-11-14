@@ -16,6 +16,8 @@ export interface RankableOffer {
   /** Lowest verified price. Null when there is no verified low. */
   verifiedLowCents: number | null;
   expired: boolean;
+  /** A renewing intro whose length is unknown cannot be the best offer. */
+  unknownIntroLength?: boolean;
 }
 
 export interface RankResult {
@@ -57,13 +59,19 @@ export function rankOffers(offers: RankableOffer[], budgetCents: number): RankRe
   }
 
   const unverified = offers.filter((offer) => offer.verification !== "verified");
-  const verified = offers.filter((offer) => offer.verification === "verified");
+  const verified = offers.filter(
+    (offer) => offer.verification === "verified" && !offer.unknownIntroLength,
+  );
+  const unknownLength = offers.filter(
+    (offer) => offer.verification === "verified" && offer.unknownIntroLength === true,
+  );
   const fitting = verified.filter(
     (offer) => !offer.expired && offer.periodCostCents <= budgetCents,
   );
-  const excludedVerified = verified.filter(
-    (offer) => offer.expired || offer.periodCostCents > budgetCents,
-  );
+  const excludedVerified = [
+    ...verified.filter((offer) => offer.expired || offer.periodCostCents > budgetCents),
+    ...unknownLength,
+  ];
   const rankedVerified = [...fitting].sort(compareOffers);
 
   return {

@@ -1,19 +1,34 @@
 export type PageKind = "pricing_page" | "checkout" | "blog_post" | "news_post" | "archived_page";
 
+export type SourceVerification = "verified" | "unverified" | "archived";
+
 export interface ClassifiedPage {
-  /** Never `verified` for a blog, news, or archived page. */
-  verification: "verified" | "archived";
+  /** Blog, news, and archived pages are never verified. */
+  verification: SourceVerification;
   /** Set for archived pages. Pricing and checkout pages do not use it. */
   postDate: string | null;
 }
 
+function hostOf(domain: string): string {
+  return domain.toLowerCase().replace(/^www\./, "");
+}
+
+function onCheckoutAllowlist(pageDomain: string | undefined, checkoutDomains: string[]): boolean {
+  if (!pageDomain) return false;
+  const host = hostOf(pageDomain);
+  return checkoutDomains.some((allowed) => hostOf(allowed) === host);
+}
+
 /**
- * A price from a blog post, news post, or archived page is archived, even when
- * the page is on the studio's own domain. It is never a verified current price.
+ * Verified only on the studio's own domain, or on a checkout domain that
+ * config lists for that studio. A blog, news, or archived page stays archived
+ * even on the studio's own domain.
  */
 export function classifySource(input: {
   pageKind: PageKind;
   onStudioDomain: boolean;
+  pageDomain?: string;
+  checkoutDomains?: string[];
   postDate: string | null;
 }): ClassifiedPage {
   if (
@@ -27,8 +42,11 @@ export function classifySource(input: {
     };
   }
 
-  return {
-    verification: "verified",
-    postDate: null,
-  };
+  const allowed =
+    input.onStudioDomain ||
+    onCheckoutAllowlist(input.pageDomain, input.checkoutDomains ?? []);
+  if (!allowed) {
+    return { verification: "unverified", postDate: null };
+  }
+  return { verification: "verified", postDate: null };
 }

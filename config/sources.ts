@@ -24,6 +24,8 @@ export interface StudioSources {
   id: "corepower_yoga" | "bodyrok" | "club_pilates" | "rocksalt_pilates";
   name: string;
   classTypes: Array<"yoga" | "reformer_pilates">;
+  /** Booking hosts linked from the studio's own site. Other third parties stay unverified. */
+  checkoutDomains: string[];
   location: {
     id: string;
     name: string;
@@ -46,6 +48,7 @@ export const studios: StudioSources[] = [
     id: "corepower_yoga",
     name: "CorePower Yoga",
     classTypes: ["yoga"],
+    checkoutDomains: [],
     location: {
       id: "corepower_san_mateo",
       name: "CorePower Yoga San Mateo",
@@ -87,6 +90,11 @@ export const studios: StudioSources[] = [
     id: "bodyrok",
     name: "BODYROK",
     classTypes: ["reformer_pilates"],
+    checkoutDomains: [
+      "go.mindbodyonline.com",
+      "widgets.mindbodyonline.com",
+      "brandedweb.mindbodyonline.com",
+    ],
     location: {
       id: "bodyrok_san_mateo",
       name: "BODYROK San Mateo",
@@ -128,6 +136,7 @@ export const studios: StudioSources[] = [
     id: "club_pilates",
     name: "Club Pilates",
     classTypes: ["reformer_pilates"],
+    checkoutDomains: [],
     location: {
       id: "club_pilates_san_mateo",
       name: "Club Pilates San Mateo",
@@ -169,6 +178,7 @@ export const studios: StudioSources[] = [
     id: "rocksalt_pilates",
     name: "RockSalt Pilates",
     classTypes: ["reformer_pilates"],
+    checkoutDomains: ["clients.mindbodyonline.com"],
     location: {
       id: "rocksalt_san_mateo",
       name: "RockSalt Pilates San Mateo",

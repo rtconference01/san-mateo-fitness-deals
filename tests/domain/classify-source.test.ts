@@ -20,7 +20,36 @@ describe("classifySource", () => {
     }
   });
 
-  it("treats a pricing page and a checkout page as verified current prices", () => {
+  it("QA-95: a third-party pricing or checkout page is unverified unless it is an allowlisted checkout", () => {
+    expect(
+      classifySource({
+        pageKind: "pricing_page",
+        onStudioDomain: false,
+        pageDomain: "go.mindbodyonline.com",
+        postDate: null,
+      }).verification,
+    ).toBe("unverified");
+    expect(
+      classifySource({
+        pageKind: "checkout",
+        onStudioDomain: false,
+        pageDomain: "go.mindbodyonline.com",
+        checkoutDomains: [],
+        postDate: null,
+      }).verification,
+    ).toBe("unverified");
+    expect(
+      classifySource({
+        pageKind: "checkout",
+        onStudioDomain: false,
+        pageDomain: "go.mindbodyonline.com",
+        checkoutDomains: ["go.mindbodyonline.com", "widgets.mindbodyonline.com"],
+        postDate: null,
+      }).verification,
+    ).toBe("verified");
+  });
+
+  it("treats a pricing page and a checkout page on the studio domain as verified", () => {
     expect(
       classifySource({
         pageKind: "pricing_page",
