@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "San Mateo fitness offers",
+  "type": "object",
+  "required": ["generated_at", "offers"],
+  "properties": {
+    "generated_at": { "type": "string", "format": "date-time" },
+    "offers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "studio",
+          "location",
+          "class_type",
+          "offer_kind",
+          "current_price_cents",
+          "verification",
+          "price_scope",
+          "source_url",
+          "captured_at",
+          "generated_at"
+        ]
+      }
+    }
+  }
+}

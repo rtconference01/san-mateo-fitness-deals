@@ -51,4 +51,14 @@ describe("annualCost", () => {
       feeCents: 0,
     })).toEqual({ ok: false, reason: "unknown_intro_length" });
   });
+
+  it("a RockSalt membership includes the full 6-month minimum", () => {
+    const result = annualCost({
+      effectivePriceCents: 13_800,
+      autoRenewPriceCents: null,
+      feeCents: 0,
+      minimumCommitmentMonths: 6,
+    });
+    expect(result).toEqual({ ok: true, annualCents: 13_800 * 6 });
+  });
 });
