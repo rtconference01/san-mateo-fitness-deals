@@ -87,6 +87,7 @@ describe("history csv", () => {
     expect(bodyrok?.checkoutDomains).toEqual([
       {
         host: "go.mindbodyonline.com",
+        pathPrefix: "/book/widgets/pricing/view/2657850e16",
         widgetId: "2657850e16",
         siteId: "5737699",
         locationId: "loc_11kRPpDZW41G8TMyaP",
