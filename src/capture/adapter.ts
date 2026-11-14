@@ -39,6 +39,10 @@ export interface CandidateOffer {
   priceScope: "location" | "national";
   cancelTermsPublished: boolean;
   durationDays: number | null;
+  /** True only when the captured page explicitly calls the offer free. */
+  isFreeOffer?: boolean;
+  /** Wording saved as evidence for a free offer. Required when the price is $0. */
+  freeOfferWording?: string | null;
 }
 
 export interface StudioAdapter {

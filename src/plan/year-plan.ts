@@ -15,6 +15,7 @@ export interface SchedulableOffer {
   classesIncluded: number | "unlimited" | null;
   durationDays: number | null;
   cancelTermsPublished: boolean;
+  minimumCommitmentMonths?: number | null;
   verifiedLowCents: number | null;
   priceScope: "location" | "national";
   locationCheckPassed: boolean;
@@ -230,7 +231,10 @@ export function buildYearPlan(input: {
       costCents: priced.cents,
       startDay: day,
       durationDays: usedDays,
-      cancelByDay: priced.includesRenewal ? null : next.offerKind === "intro" && next.autoRenewPriceCents !== null ? day + usedDays : null,
+      cancelByDay:
+        next.offerKind === "intro" && next.autoRenewPriceCents !== null
+          ? day + usedDays - (priced.includesRenewal ? 1 : 0)
+          : null,
       cancelTermsUnknown: priced.cancelTermsUnknown,
       includesRenewal: priced.includesRenewal,
       sourceUrl: next.sourceUrl,

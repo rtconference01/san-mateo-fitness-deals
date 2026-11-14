@@ -63,6 +63,8 @@ export interface AnnualCostInput {
    * A free week is 7. A two-week intro is 14. Unknown length cannot be priced.
    */
   introLengthDays?: number | null;
+  /** Monthly memberships that cannot be cancelled before this many months. */
+  minimumCommitmentMonths?: number | null;
 }
 
 export type AnnualCostResult =
@@ -83,7 +85,11 @@ export function annualCost(input: AnnualCostInput): AnnualCostResult {
     throw new Error("months must be a positive integer");
   }
   if (input.autoRenewPriceCents === null) {
-    return { ok: true, annualCents: input.effectivePriceCents + input.feeCents };
+    const commitment = input.minimumCommitmentMonths ?? 1;
+    if (!Number.isInteger(commitment) || commitment < 1) {
+      throw new Error("minimum commitment must be a positive integer");
+    }
+    return { ok: true, annualCents: input.effectivePriceCents * commitment + input.feeCents };
   }
   assertCents(input.autoRenewPriceCents, "auto-renew price");
   const introDays = input.introLengthDays;

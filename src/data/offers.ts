@@ -88,14 +88,17 @@ function toRow(
           offer.classesIncluded ?? "unlimited",
           offer.classesIncluded === "unlimited" ? classesPerWeek * 4 : 12,
         );
-  const annual =
+  const annualResult =
     price === null
       ? null
       : annualCost({
           effectivePriceCents: price,
           autoRenewPriceCents: offer.autoRenewPriceCents,
           feeCents: offer.feesCents + offer.taxCents,
+          introLengthDays: offer.durationDays,
+          minimumCommitmentMonths: offer.minimumCommitmentMonths,
         });
+  const annual = annualResult && annualResult.ok ? annualResult.annualCents : null;
   const point: PricePoint = {
     effectivePriceCents: price ?? 0,
     capturedAt: new Date(offer.capturedAt),

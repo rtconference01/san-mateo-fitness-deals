@@ -12,12 +12,14 @@ export function validateOffer(offer: CandidateOffer, locationSelected: boolean):
     return { ok: false, error: "scraper_error", reason: "location_not_selected" };
   }
   const price = offer.effectivePriceCents;
-  const freeWeek = offer.offerType === "free_week";
   if (price === null || price === undefined) {
     return { ok: false, error: "scraper_error", reason: "missing_price" };
   }
-  if (price === 0 && !freeWeek) {
+  if (price === 0 && offer.isFreeOffer !== true) {
     return { ok: false, error: "scraper_error", reason: "zero_price" };
+  }
+  if (price === 0 && !offer.freeOfferWording) {
+    return { ok: false, error: "scraper_error", reason: "missing_free_wording" };
   }
   if (price < 0) {
     return { ok: false, error: "scraper_error", reason: "invalid_price" };

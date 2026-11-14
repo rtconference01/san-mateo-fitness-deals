@@ -187,6 +187,8 @@ export function parseCorePower(html: string): ParsedStudio {
         durationDays: 7,
         restrictions: "new students; national page; San Mateo price not separately confirmed",
         cancelTermsPublished: true,
+        isFreeOffer: true,
+        freeOfferWording: "free week of unlimited classes",
       }),
     );
   }
@@ -309,6 +311,8 @@ export function parseClubPilates(html: string): ParsedStudio {
         durationDays: 1,
         restrictions: "free intro class",
         cancelTermsPublished: true,
+        isFreeOffer: true,
+        freeOfferWording: "Free Intro Class",
       }),
     );
   }
