@@ -13,6 +13,8 @@ export interface RawEvidence {
   capturedAt: Date;
   html: string;
   screenshot: Uint8Array;
+  /** False when the studio page was fetched before a San Mateo location was selected. */
+  locationSelected: boolean;
 }
 
 /**
@@ -33,6 +35,10 @@ export interface CandidateOffer {
   expiry: string | null;
   promoCode: string | null;
   feesCents: number | null;
+  offerKind: "intro" | "regular";
+  priceScope: "location" | "national";
+  cancelTermsPublished: boolean;
+  durationDays: number | null;
 }
 
 export interface StudioAdapter {

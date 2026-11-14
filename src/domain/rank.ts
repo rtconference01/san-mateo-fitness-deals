@@ -38,7 +38,7 @@ function percentAboveLow(offer: RankableOffer): number {
   return (offer.currentPriceCents - offer.verifiedLowCents) / offer.verifiedLowCents;
 }
 
-function compareOffers(left: RankableOffer, right: RankableOffer): number {
+export function compareOffers(left: RankableOffer, right: RankableOffer): number {
   if (left.periodCostCents !== right.periodCostCents) {
     return left.periodCostCents - right.periodCostCents;
   }
