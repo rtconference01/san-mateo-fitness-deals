@@ -2,6 +2,14 @@ export type PageKind = "pricing_page" | "checkout" | "blog_post" | "news_post" |
 
 export type SourceVerification = "verified" | "unverified" | "archived";
 
+export interface CheckoutPin {
+  host: string;
+  pathPrefix?: string;
+  siteId?: string;
+  widgetId?: string;
+  locationId?: string;
+}
+
 export interface ClassifiedPage {
   /** Blog, news, and archived pages are never verified. */
   verification: SourceVerification;
@@ -13,22 +21,53 @@ function hostOf(domain: string): string {
   return domain.toLowerCase().replace(/^www\./, "");
 }
 
-function onCheckoutAllowlist(pageDomain: string | undefined, checkoutDomains: string[]): boolean {
-  if (!pageDomain) return false;
-  const host = hostOf(pageDomain);
-  return checkoutDomains.some((allowed) => hostOf(allowed) === host);
+/**
+ * Every field set on the pin must match. A bare host, a different location,
+ * or a different widget does not verify.
+ */
+export function checkoutPinMatches(
+  observed: {
+    url: string;
+    siteId?: string;
+    widgetId?: string;
+    locationId?: string;
+  },
+  pins: CheckoutPin[],
+): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(observed.url);
+  } catch {
+    return false;
+  }
+  const host = hostOf(parsed.hostname);
+  const pathAndQuery = `${parsed.pathname}${parsed.search}`;
+  return pins.some((pin) => {
+    if (hostOf(pin.host) !== host) return false;
+    if (pin.pathPrefix && !pathAndQuery.startsWith(pin.pathPrefix)) return false;
+    if (pin.widgetId && (!pathAndQuery.includes(pin.widgetId) || observed.widgetId !== pin.widgetId)) {
+      return false;
+    }
+    if (pin.siteId && observed.siteId !== pin.siteId) return false;
+    if (pin.locationId && observed.locationId !== pin.locationId) return false;
+    const studioParam = parsed.searchParams.get("studioid");
+    if (studioParam && pin.locationId && studioParam !== pin.locationId) return false;
+    return true;
+  });
 }
 
 /**
- * Verified only on the studio's own domain, or on a checkout domain that
- * config lists for that studio. A blog, news, or archived page stays archived
- * even on the studio's own domain.
+ * Verified only on the studio's own domain, or on an exact checkout pin.
+ * A blog, news, or archived page stays archived even on the studio's domain.
  */
 export function classifySource(input: {
   pageKind: PageKind;
   onStudioDomain: boolean;
-  pageDomain?: string;
-  checkoutDomains?: string[];
+  pageUrl?: string;
+  siteId?: string;
+  widgetId?: string;
+  locationId?: string;
+  checkoutPins?: CheckoutPin[];
   postDate: string | null;
 }): ClassifiedPage {
   if (
@@ -36,16 +75,21 @@ export function classifySource(input: {
     input.pageKind === "news_post" ||
     input.pageKind === "archived_page"
   ) {
-    return {
-      verification: "archived",
-      postDate: input.postDate,
-    };
+    return { verification: "archived", postDate: input.postDate };
   }
 
-  const allowed =
-    input.onStudioDomain ||
-    onCheckoutAllowlist(input.pageDomain, input.checkoutDomains ?? []);
-  if (!allowed) {
+  const pinned =
+    input.pageUrl !== undefined &&
+    checkoutPinMatches(
+      {
+        url: input.pageUrl,
+        siteId: input.siteId,
+        widgetId: input.widgetId,
+        locationId: input.locationId,
+      },
+      input.checkoutPins ?? [],
+    );
+  if (!input.onStudioDomain && !pinned) {
     return { verification: "unverified", postDate: null };
   }
   return { verification: "verified", postDate: null };

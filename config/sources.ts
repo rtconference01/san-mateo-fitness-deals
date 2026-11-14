@@ -1,3 +1,5 @@
+import type { CheckoutPin } from "../src/domain/classify-source";
+
 export type PageScope = "san_mateo" | "national_brand";
 export type Confirmation = "confirmed" | "unconfirmed";
 export type SocialPlatform = "instagram" | "facebook";
@@ -25,7 +27,8 @@ export interface StudioSources {
   name: string;
   classTypes: Array<"yoga" | "reformer_pilates">;
   /** Booking hosts linked from the studio's own site. Other third parties stay unverified. */
-  checkoutDomains: string[];
+  /** Pinned checkout pages. A host alone does not verify another studio's page. */
+  checkoutDomains: CheckoutPin[];
   location: {
     id: string;
     name: string;
@@ -91,9 +94,13 @@ export const studios: StudioSources[] = [
     name: "BODYROK",
     classTypes: ["reformer_pilates"],
     checkoutDomains: [
-      "go.mindbodyonline.com",
-      "widgets.mindbodyonline.com",
-      "brandedweb.mindbodyonline.com",
+      {
+        host: "go.mindbodyonline.com",
+        pathPrefix: "/book/widgets/pricing/view/2657850e16",
+        widgetId: "2657850e16",
+        siteId: "5737699",
+        locationId: "loc_11kRPpDZW41G8TMyaP",
+      },
     ],
     location: {
       id: "bodyrok_san_mateo",
@@ -178,7 +185,13 @@ export const studios: StudioSources[] = [
     id: "rocksalt_pilates",
     name: "RockSalt Pilates",
     classTypes: ["reformer_pilates"],
-    checkoutDomains: ["clients.mindbodyonline.com"],
+    checkoutDomains: [
+      {
+        host: "clients.mindbodyonline.com",
+        pathPrefix: "/classic/ws",
+        locationId: "34355",
+      },
+    ],
     location: {
       id: "rocksalt_san_mateo",
       name: "RockSalt Pilates San Mateo",
