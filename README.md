@@ -1,1 +1,1 @@
-# san-mateo-fitness-deals
+San Mateo Fitness Deals tracks intro-offer prices for reformer Pilates and yoga at CorePower Yoga, BODYROK, Club Pilates, and RockSalt Pilates in San Mateo, California, so the owner can buy each intro offer near its lowest observed price and stay inside a $350 budget for the year. Official studio websites and checkout pages are the only source of truth for a price, and every stored price points at the capture that produced it.
